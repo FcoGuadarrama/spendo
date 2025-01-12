@@ -1,7 +1,24 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Button } from '@/Components/ui/button'
+import { Input } from '@/Components/ui/input'
+import { Label } from '@/Components/ui/label'
+import InputError from "@/Components/InputError.vue";
+import {useForm} from "@inertiajs/vue3";
+
+const form = useForm({
+    email: '',
+    password: '',
+    remember: false,
+});
+
+const submit = () => {
+    form.post(route('login'), {
+        onFinish: () => {
+            form.reset('password');
+        },
+    });
+};
+
 </script>
 
 <template>
@@ -16,35 +33,42 @@ import { Label } from '@/components/ui/label'
                         Enter your email below to login to your account
                     </p>
                 </div>
-                <div class="grid gap-4">
-                    <div class="grid gap-2">
-                        <Label for="email">Email</Label>
-                        <Input
-                            id="email"
-                            type="email"
-                            placeholder="m@example.com"
-                            required
-                        />
-                    </div>
-                    <div class="grid gap-2">
-                        <div class="flex items-center">
-                            <Label for="password">Password</Label>
-                            <a
-                                href="/forgot-password"
-                                class="ml-auto inline-block text-sm underline"
-                            >
-                                Forgot your password?
-                            </a>
+                <form @submit.prevent="submit">
+                    <div class="grid gap-4">
+                        <div class="grid gap-2">
+                            <Label for="email">Email</Label>
+                            <Input
+                                id="email"
+                                v-model="form.email"
+                                type="email"
+                                placeholder="m@example.com"
+                                required
+                            />
+                            <InputError class="mt-2" :message="form.errors.email" />
                         </div>
-                        <Input id="password" type="password" required />
+                        <div class="grid gap-2">
+                            <div class="flex items-center">
+                                <Label for="password">Password</Label>
+                                <a
+                                    href="/forgot-password"
+                                    class="ml-auto inline-block text-sm underline"
+                                >
+                                    Forgot your password?
+                                </a>
+                            </div>
+                            <Input
+                                v-model="form.password"
+                                id="password"
+                                type="password"
+                                required />
+                            <InputError class="mt-2" :message="form.errors.password" />
+
+                        </div>
+                        <Button type="submit" class="w-full">
+                            Login
+                        </Button>
                     </div>
-                    <Button type="submit" class="w-full">
-                        Login
-                    </Button>
-                    <Button variant="outline" class="w-full">
-                        Login with Google
-                    </Button>
-                </div>
+                </form>
                 <div class="mt-4 text-center text-sm">
                     Don't have an account?
                     <a href="#" class="underline">
