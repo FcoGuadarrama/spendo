@@ -44,6 +44,7 @@ const submit = () => {
                                 placeholder="m@example.com"
                                 required
                             />
+
                             <InputError class="mt-2" :message="form.errors.email" />
                         </div>
                         <div class="grid gap-2">
