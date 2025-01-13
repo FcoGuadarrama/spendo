@@ -45,6 +45,7 @@ const submit = () => {
                                 required
                             />
 
+
                             <InputError class="mt-2" :message="form.errors.email" />
                         </div>
                         <div class="grid gap-2">
