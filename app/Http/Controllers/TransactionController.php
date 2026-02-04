@@ -58,6 +58,7 @@ class TransactionController extends Controller
         return Inertia::render('Transactions/Create', [
             'accounts' => $user->accounts()->active()->orderBy('name')->get(),
             'categories' => $user->categories()->active()->ordered()->get(),
+            'debts' => $user->debts()->orderBy('name')->get(),
         ]);
     }
 
@@ -69,6 +70,7 @@ class TransactionController extends Controller
             'account_id' => ['required', Rule::exists('accounts', 'id')->where('user_id', $userId)],
             'category_id' => ['nullable', Rule::exists('categories', 'id')->where('user_id', $userId)],
             'transfer_to_account_id' => ['nullable', Rule::exists('accounts', 'id')->where('user_id', $userId), 'different:account_id'],
+            'debt_id' => ['nullable', Rule::exists('debts', 'id')->where('user_id', $userId)],
             'type' => 'required|in:income,expense,transfer',
             'amount' => 'required|numeric|min:0.01',
             'description' => 'nullable|string|max:255',
@@ -93,6 +95,7 @@ class TransactionController extends Controller
             'transaction' => $transaction,
             'accounts' => $user->accounts()->active()->orderBy('name')->get(),
             'categories' => $user->categories()->active()->ordered()->get(),
+            'debts' => $user->debts()->orderBy('name')->get(),
         ]);
     }
 
@@ -106,6 +109,7 @@ class TransactionController extends Controller
             'account_id' => ['required', Rule::exists('accounts', 'id')->where('user_id', $userId)],
             'category_id' => ['nullable', Rule::exists('categories', 'id')->where('user_id', $userId)],
             'transfer_to_account_id' => ['nullable', Rule::exists('accounts', 'id')->where('user_id', $userId), 'different:account_id'],
+            'debt_id' => ['nullable', Rule::exists('debts', 'id')->where('user_id', $userId)],
             'type' => 'required|in:income,expense,transfer',
             'amount' => 'required|numeric|min:0.01',
             'description' => 'nullable|string|max:255',

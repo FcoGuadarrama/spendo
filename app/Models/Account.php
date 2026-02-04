@@ -114,4 +114,15 @@ class Account extends Model
         $this->saveQuietly();
     }
 
+    public function adjustBalance(float $amount, string $type): void
+    {
+        if ($type === 'income' || $type === 'transfer_in') {
+            $this->balance += $amount;
+        } elseif ($type === 'expense' || $type === 'transfer') {
+            $this->balance -= $amount;
+        }
+
+        $this->saveQuietly();
+    }
+
 }

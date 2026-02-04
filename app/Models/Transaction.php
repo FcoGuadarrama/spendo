@@ -29,6 +29,7 @@ class Transaction extends Model
         'is_confirmed',
         'reference',
         'tags',
+        'debt_id',
     ];
 
     protected $casts = [
@@ -58,6 +59,11 @@ class Transaction extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function debt(): BelongsTo
+    {
+        return $this->belongsTo(Debt::class);
     }
 
     public function transferToAccount(): BelongsTo
@@ -156,26 +162,77 @@ class Transaction extends Model
     protected static function booted(): void
     {
         static::created(function (Transaction $transaction) {
-            $transaction->account->updateBalance();
-            
-            if ($transaction->isTransfer() && $transaction->transferToAccount) {
-                $transaction->transferToAccount->updateBalance();
+            if ($transaction->is_confirmed) {
+                // Use adjustBalance for efficient updates
+                $transaction->account->adjustBalance($transaction->amount, $transaction->type);
+                
+                if ($transaction->isTransfer() && $transaction->transferToAccount) {
+                    $transaction->transferToAccount->adjustBalance($transaction->amount, 'transfer_in');
+                }
+            }
+
+            if ($transaction->debt) {
+                $transaction->debt->updateBalance();
             }
         });
 
         static::updated(function (Transaction $transaction) {
+            // Revert old values if necessary or just recalculate everything for safety on updates
+            // For updates, full recalculation is often safer unless we track all changes carefully.
+            // However, sticking to the user's requested pattern for 'created', we should keep 'updated' robust.
+            // Let's stick to updateBalance() for updates/deletes to ensure consistency, 
+            // OR fully implement adjust logic (revert old, apply new).
+            // Given the complexity of updates (changing amounts, types, accounts), 
+            // updateBalance() is safer.
+            
             $transaction->account->updateBalance();
             
             if ($transaction->isTransfer() && $transaction->transferToAccount) {
                 $transaction->transferToAccount->updateBalance();
             }
+
+            // Also check if account changed
+            if ($transaction->wasChanged('account_id')) {
+                Account::find($transaction->getOriginal('account_id'))?->updateBalance();
+            }
+            if ($transaction->wasChanged('transfer_to_account_id')) {
+                 $oldTransferId = $transaction->getOriginal('transfer_to_account_id');
+                 if ($oldTransferId) {
+                     Account::find($oldTransferId)?->updateBalance();
+                 }
+            }
+
+            if ($transaction->debt) {
+                $transaction->debt->refresh()->updateBalance();
+            } else {
+                if ($transaction->wasChanged('debt_id')) {
+                     $oldDebtId = $transaction->getOriginal('debt_id');
+                     if ($oldDebtId) {
+                         Debt::find($oldDebtId)?->updateBalance();
+                     }
+                }
+            }
         });
 
         static::deleted(function (Transaction $transaction) {
-            $transaction->account->updateBalance();
+            if ($transaction->is_confirmed) {
+                // Reverse operation
+                $reverseType = $transaction->type;
+                if ($transaction->type === 'income') $reverseType = 'expense'; // deduct
+                if ($transaction->type === 'expense') $reverseType = 'income'; // add back
+                
+                // But adjustBalance takes the type of the transaction and adds/subtracts logic inside.
+                // expense -> subtracts. So to reverse, we pass negative amount?
+                // Or we can just use updateBalance() for safety.
+                $transaction->account->updateBalance();
             
-            if ($transaction->isTransfer() && $transaction->transferToAccount) {
-                $transaction->transferToAccount->updateBalance();
+                if ($transaction->isTransfer() && $transaction->transferToAccount) {
+                    $transaction->transferToAccount->updateBalance();
+                }
+            }
+
+            if ($transaction->debt) {
+                $transaction->debt->updateBalance();
             }
         });
     }

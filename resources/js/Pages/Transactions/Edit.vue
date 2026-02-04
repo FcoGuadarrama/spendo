@@ -26,6 +26,7 @@ interface Transaction {
     account_id: number
     category_id: number | null
     transfer_to_account_id: number | null
+    debt_id: number | null
     notes: string
     is_confirmed: boolean
 }
@@ -34,6 +35,7 @@ const props = defineProps<{
     transaction: Transaction
     accounts: Account[]
     categories: Category[]
+    debts: { id: number; name: string }[]
 }>()
 
 const form = ref({
@@ -44,6 +46,7 @@ const form = ref({
     account_id: props.transaction.account_id,
     category_id: props.transaction.category_id,
     transfer_to_account_id: props.transaction.transfer_to_account_id,
+    debt_id: props.transaction.debt_id || null, // Assuming debt_id is available in transaction prop. We need to check interface.
     notes: props.transaction.notes,
     is_confirmed: props.transaction.is_confirmed,
 })
@@ -69,7 +72,7 @@ const submit = () => {
             </h2>
         </template>
 
-        <div class="max-w-2xl">
+        <div class="mx-auto max-w-2xl">
             <Card>
                 <CardHeader>
                     <CardTitle>Transacción #{{ transaction.id }}</CardTitle>
@@ -146,6 +149,20 @@ const submit = () => {
                                 <p v-if="errors.category_id" class="mt-1 text-sm text-red-600">{{ errors.category_id }}</p>
                             </div>
                         </div>
+
+                        <div v-if="form.type === 'expense'" class="p-4 bg-muted/50 rounded-lg space-y-2">
+                             <Label for="debt_id">¿Es pago de una deuda?</Label>
+                             <select
+                                 id="debt_id"
+                                 v-model="form.debt_id"
+                                 class="mt-1 w-full rounded-md border border-input bg-background px-3 py-2"
+                             >
+                                 <option :value="null">No, es un gasto regular</option>
+                                 <option v-for="debt in debts" :key="debt.id" :value="debt.id">
+                                     {{ debt.name }}
+                                 </option>
+                             </select>
+                         </div>
 
                         <div>
                             <Label for="date">Fecha</Label>

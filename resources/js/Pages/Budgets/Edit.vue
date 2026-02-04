@@ -59,7 +59,7 @@ const submit = () => {
             </h2>
         </template>
 
-        <div class="max-w-2xl">
+        <div class="mx-auto max-w-2xl">
             <Card>
                 <CardHeader>
                     <CardTitle>Presupuesto #{{ budget.id }}</CardTitle>

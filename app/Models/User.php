@@ -67,6 +67,11 @@ class User extends Authenticatable
         return $this->hasMany(Budget::class);
     }
 
+    public function debts(): HasMany
+    {
+        return $this->hasMany(Debt::class);
+    }
+
     // ─────────────────────────────────────────────────────────────
     // Helpers
     // ─────────────────────────────────────────────────────────────

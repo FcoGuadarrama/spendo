@@ -109,6 +109,15 @@ class DashboardController extends Controller
             ]);
         }
 
+        // Debts
+        $activeDebts = $user->debts()
+            ->where('remaining_amount', '>', 0)
+            ->orderBy('remaining_amount', 'desc')
+            ->get();
+
+        $totalDebt = $activeDebts->sum('remaining_amount');
+        $totalMonthlyDebt = $activeDebts->sum('monthly_payment');
+
         return Inertia::render('Dashboard', [
             'accounts' => $accounts,
             'totalBalance' => $user->getTotalBalance(),
@@ -122,6 +131,9 @@ class DashboardController extends Controller
             'currentMonth' => $now->format('F Y'),
             'year' => $year,
             'month' => $month,
+            'debts' => $activeDebts,
+            'totalDebt' => $totalDebt,
+            'totalMonthlyDebt' => $totalMonthlyDebt,
         ]);
     }
 }

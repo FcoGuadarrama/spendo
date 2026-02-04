@@ -21,12 +21,14 @@ interface Category {
 const props = defineProps<{
     accounts: Account[]
     categories: Category[]
+    debts: { id: number; name: string }[]
 }>()
 
 const form = ref({
     account_id: props.accounts[0]?.id || null,
     category_id: null as number | null,
     transfer_to_account_id: null as number | null,
+    debt_id: null as number | null,
     type: 'expense',
     amount: 0,
     description: '',
@@ -61,7 +63,7 @@ const submit = () => {
             </h2>
         </template>
 
-        <div class="max-w-2xl">
+        <div class="mx-auto max-w-2xl">
             <Card>
                 <CardHeader>
                     <CardTitle>Registrar una transacción</CardTitle>
@@ -132,6 +134,23 @@ const submit = () => {
                                 </p>
                             </div>
                         </div>
+
+                         <div v-if="form.type === 'expense'" class="p-4 bg-muted/50 rounded-lg space-y-2">
+                             <Label for="debt_id">¿Es pago de una deuda?</Label>
+                             <select
+                                 id="debt_id"
+                                 v-model="form.debt_id"
+                                 class="mt-1 w-full rounded-md border border-input bg-background px-3 py-2"
+                             >
+                                 <option :value="null">No, es un gasto regular</option>
+                                 <option v-for="debt in debts" :key="debt.id" :value="debt.id">
+                                     {{ debt.name }}
+                                 </option>
+                             </select>
+                             <p class="text-xs text-muted-foreground mt-1" v-if="form.debt_id">
+                                 Este pago se descontará de la deuda seleccionada.
+                             </p>
+                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>

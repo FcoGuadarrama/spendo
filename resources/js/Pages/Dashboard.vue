@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import { Head, Link, router } from '@inertiajs/vue3'
+import { Head, Link } from '@inertiajs/vue3'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card'
 import { Button } from '@/Components/ui/button'
 import { Badge } from '@/Components/ui/badge'
@@ -57,8 +57,17 @@ interface BudgetProgress {
     status: 'ok' | 'warning' | 'over'
 }
 
+interface Debt {
+    id: number
+    name: string
+    total_amount: number
+    remaining_amount: number
+    monthly_payment: number | null
+}
+
 interface MonthlyTrend {
     month: string
+    year: number
     income: number
     expenses: number
 }
@@ -74,6 +83,9 @@ const props = defineProps<{
     budgets: BudgetProgress[]
     monthlyTrend: MonthlyTrend[]
     currentMonth: string
+    debts: Debt[]
+    totalDebt: number
+    totalMonthlyDebt: number
 }>()
 
 const formatCurrency = (amount: number) => {
@@ -347,6 +359,55 @@ const maxExpense = computed(() => {
                                     class="py-8 text-center text-muted-foreground"
                                 >
                                     No hay transacciones
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <!-- Debts -->
+                    <Card>
+                        <CardHeader>
+                            <div class="flex items-center justify-between">
+                                <CardTitle>Deudas Activas</CardTitle>
+                                <Link :href="route('debts.index')">
+                                    <Button variant="ghost" size="sm">Ver todas</Button>
+                                </Link>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div class="space-y-4">
+                                <div class="grid grid-cols-2 gap-4 pb-2">
+                                    <div class="space-y-1">
+                                        <p class="text-xs font-medium text-muted-foreground">Total Deuda</p>
+                                        <p class="text-xl font-bold">{{ formatCurrency(totalDebt) }}</p>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <p class="text-xs font-medium text-muted-foreground">Mensualidad Total</p>
+                                        <p class="text-xl font-bold">{{ formatCurrency(totalMonthlyDebt) }}</p>
+                                    </div>
+                                </div>
+                                <div
+                                    v-for="debt in debts.slice(0, 5)"
+                                    :key="debt.id"
+                                    class="space-y-2"
+                                >
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm font-medium">{{ debt.name }}</span>
+                                        <span class="text-sm font-semibold">{{ formatCurrency(debt.remaining_amount) }}</span>
+                                    </div>
+                                    <Progress :model-value="((debt.total_amount - debt.remaining_amount) / debt.total_amount) * 100" class="h-2" />
+                                    <div class="flex justify-between text-xs text-muted-foreground">
+                                        <span>Total: {{ formatCurrency(debt.total_amount) }}</span>
+                                        <span v-if="debt.monthly_payment">
+                                            Pago: {{ formatCurrency(debt.monthly_payment) }}/mes
+                                        </span>
+                                    </div>
+                                </div>
+                                <div
+                                    v-if="debts.length === 0"
+                                    class="py-8 text-center text-muted-foreground"
+                                >
+                                    ¡Libre de deudas! 🎉
                                 </div>
                             </div>
                         </CardContent>
