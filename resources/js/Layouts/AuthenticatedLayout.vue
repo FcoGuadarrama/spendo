@@ -88,10 +88,10 @@ const navMain = computed(() => [
         items: [],
     },
     {
-        title: 'Presupuestos',
-        url: route('budgets.index'),
+        title: 'Gastos Fijos',
+        url: route('fixed-expenses.index'),
         icon: Target,
-        isActive: route().current('budgets.*'),
+        isActive: route().current('fixed-expenses.*'),
         items: [],
     },
     {

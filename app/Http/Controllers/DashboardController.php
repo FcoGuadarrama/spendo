@@ -125,6 +125,70 @@ class DashboardController extends Controller
         $totalCCDebt = $creditCardDebts->sum('remaining_amount'); // MSI remaining
         $totalCCMonthly = $creditCardDebts->sum('monthly_payment'); // MSI monthly payment
 
+        // 1. Fixed Expenses (Manual Projections)
+        $rawFixed = $user->fixedExpenses()->where('is_active', true)->get();
+        \Illuminate\Support\Facades\Log::info('Fixed Expenses Count: ' . $rawFixed->count());
+        
+        $fixedExpenses = $rawFixed->map(function ($expense) {
+                return [
+                    'id' => 'fe-' . $expense->id,
+                    'name' => $expense->description,
+                    'amount' => (float) $expense->amount,
+                    'day' => $expense->day_of_month,
+                    'type' => 'fixed_expense',
+                    'icon' => $expense->category?->icon ?? 'calendar',
+                    'color' => $expense->category?->color ?? 'blue',
+                ];
+            });
+
+        // 2. Personal Debts (Fixed Due Day)
+        $personalDebtsProjection = $personalDebts->map(function ($debt) {
+            return [
+                'id' => $debt->id,
+                'name' => $debt->name,
+                'amount' => $debt->monthly_payment,
+                'day' => $debt->due_day ?? 1, // Default to 1st if not set
+                'type' => 'loan',
+                'icon' => 'banknote',
+                'color' => 'red',
+            ];
+        });
+
+        // 3. Credit Card Debts (Based on Account Due Day)
+        // Group by Account to show "Payment for Card X" instead of individual MSI items?
+        // Or show individual MSI items?
+        // User asked for "Cuanto voy a pagar este mes".
+        // Usually you pay the TOTAL of the card.
+        // Let's group CC debts by Account.
+        $ccDebtsProjection = $creditCardDebts->groupBy('account_id')->map(function ($debts, $accountId) use ($accounts) {
+             $account = $accounts->firstWhere('id', $accountId);
+             return [
+                'id' => 'cc-' . $accountId,
+                'name' => 'Pago ' . ($account?->name ?? 'Tarjeta'),
+                'amount' => $debts->sum('monthly_payment'),
+                'day' => $account?->due_day ?? 1,
+                'type' => 'credit_card',
+                'icon' => 'credit-card',
+                'color' => 'orange',
+             ];
+        });
+
+        $monthlyCalendar = $fixedExpenses
+            ->concat($personalDebtsProjection)
+            ->concat($ccDebtsProjection)
+            ->sortBy('day')
+            ->values();
+
+        // Debugging Sums
+        $totalFixedExpenses = $fixedExpenses->sum('amount');
+        $totalDebtsProjection = $personalDebtsProjection->sum('amount');
+        $totalCCProjection = $ccDebtsProjection->sum('amount');
+        
+        // Force recalculation of total (sanity check)
+        $totalMonthlyCommitment = $totalFixedExpenses + $totalDebtsProjection + $totalCCProjection;
+
+        \Illuminate\Support\Facades\Log::info("Fixed: $totalFixedExpenses, Debts: $totalDebtsProjection, CC: $totalCCProjection, Total: $totalMonthlyCommitment");
+
         return Inertia::render('Dashboard', [
             'accounts' => $accounts,
             'totalBalance' => $user->getTotalBalance(),
@@ -138,11 +202,14 @@ class DashboardController extends Controller
             'currentMonth' => $now->format('F Y'),
             'year' => $year,
             'month' => $month,
-            'debts' => $allActiveDebts->values(), // Send all for list, or maybe just personal? Let's send all but marked.
+            'debts' => $allActiveDebts->values(),
             'totalPersonalDebt' => $totalPersonalDebt,
             'totalPersonalMonthly' => $totalPersonalMonthly,
             'totalCCDebt' => $totalCCDebt,
             'totalCCMonthly' => $totalCCMonthly,
+            'monthlyCalendar' => $monthlyCalendar,
+            'totalMonthlyCommitment' => $totalMonthlyCommitment,
+            'debugTotalFixed' => $totalFixedExpenses, // Sending explicitly
         ]);
     }
 }

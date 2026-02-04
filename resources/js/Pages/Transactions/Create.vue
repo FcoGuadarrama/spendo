@@ -36,6 +36,7 @@ const form = ref({
     date: new Date().toISOString().split('T')[0],
     time: new Date().toTimeString().slice(0, 5),
     is_confirmed: true,
+    is_recurring: false,
 })
 
 const errors = ref<Record<string, string>>({})
@@ -215,6 +216,18 @@ const submit = () => {
                                 rows="3"
                                 placeholder="Notas adicionales..."
                             />
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <input
+                                id="is_recurring"
+                                v-model="form.is_recurring"
+                                type="checkbox"
+                                class="h-4 w-4 rounded border-gray-300"
+                            />
+                            <Label for="is_recurring" class="mb-0 cursor-pointer">
+                                Gasto Recurrente (se paga mensualmente)
+                            </Label>
                         </div>
 
                         <div class="flex items-center gap-2">

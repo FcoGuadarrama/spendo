@@ -1,9 +1,9 @@
 <?php
 
 use App\Http\Controllers\AccountController;
-use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FixedExpenseController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
@@ -44,13 +44,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
 
-    // Budgets
-    Route::get('/budgets', [BudgetController::class, 'index'])->name('budgets.index');
-    Route::get('/budgets/create', [BudgetController::class, 'create'])->name('budgets.create');
-    Route::post('/budgets', [BudgetController::class, 'store'])->name('budgets.store');
-    Route::get('/budgets/{budget}/edit', [BudgetController::class, 'edit'])->name('budgets.edit');
-    Route::put('/budgets/{budget}', [BudgetController::class, 'update'])->name('budgets.update');
-    Route::delete('/budgets/{budget}', [BudgetController::class, 'destroy'])->name('budgets.destroy');
+    // Fixed Expenses (Replacing Budgets)
+    Route::get('/fixed-expenses', [FixedExpenseController::class, 'index'])->name('fixed-expenses.index');
+    Route::get('/fixed-expenses/create', [FixedExpenseController::class, 'create'])->name('fixed-expenses.create');
+    Route::post('/fixed-expenses', [FixedExpenseController::class, 'store'])->name('fixed-expenses.store');
+    Route::get('/fixed-expenses/{fixedExpense}/edit', [FixedExpenseController::class, 'edit'])->name('fixed-expenses.edit');
+    Route::put('/fixed-expenses/{fixedExpense}', [FixedExpenseController::class, 'update'])->name('fixed-expenses.update');
+    Route::delete('/fixed-expenses/{fixedExpense}', [FixedExpenseController::class, 'destroy'])->name('fixed-expenses.destroy');
 });
 
 Route::middleware('auth')->group(function () {

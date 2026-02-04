@@ -16,6 +16,7 @@ import {
     CreditCardIcon,
     BanknoteIcon,
     LandmarkIcon,
+    TargetIcon,
 } from 'lucide-vue-next'
 import { computed } from 'vue'
 
@@ -89,6 +90,9 @@ const props = defineProps<{
     totalPersonalMonthly: number
     totalCCDebt: number
     totalCCMonthly: number
+    monthlyCalendar: any[] // Using any for simplicity as it's a mixed object
+    totalMonthlyCommitment: number
+    debugTotalFixed: number
 }>()
 
 const formatCurrency = (amount: number) => {
@@ -143,7 +147,7 @@ const maxExpense = computed(() => {
         <div class="py-6">
             <div class="space-y-6">
                 <!-- Stats Cards -->
-                <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
                     <!-- Total Balance -->
                     <Card>
                         <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -154,6 +158,20 @@ const maxExpense = computed(() => {
                             <div class="text-2xl font-bold">{{ formatCurrency(totalBalance) }}</div>
                             <p class="text-xs text-muted-foreground">
                                 En {{ accounts.length }} cuentas
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <!-- Monthly Commitments (Fixed Expenses + Debts) -->
+                    <Card>
+                        <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle class="text-sm font-medium">Compromisos Fijos</CardTitle>
+                            <TargetIcon class="h-4 w-4 text-orange-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div class="text-2xl font-bold text-orange-600">{{ formatCurrency(totalMonthlyCommitment) }}</div>
+                            <p class="text-xs text-muted-foreground">
+                                Gastos Fijos ({{ formatCurrency(debugTotalFixed) }}) + Deudas
                             </p>
                         </CardContent>
                     </Card>
@@ -390,6 +408,10 @@ const maxExpense = computed(() => {
                                         <p class="text-xs font-medium text-muted-foreground">Pago Mensual Total</p>
                                         <p class="text-xl font-bold text-orange-600">{{ formatCurrency(totalCCMonthly) }}</p>
                                     </div>
+                                    <div class="space-y-1">
+                                        <p class="text-sm font-medium text-muted-foreground">Gastos Proyectados</p>
+                                        <p class="text-xl font-bold text-blue-600">{{ formatCurrency(totalMonthlyCommitment - totalPersonalMonthly - totalCCMonthly) }}</p>
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
@@ -446,46 +468,41 @@ const maxExpense = computed(() => {
                         </Card>
                     </div>
 
-                    <!-- Budget Progress -->
+                    <!-- Monthly Payment Calendar -->
                     <Card>
                         <CardHeader>
                             <div class="flex items-center justify-between">
-                                <CardTitle>Presupuestos</CardTitle>
-                                <Link :href="route('budgets.index')">
-                                    <Button variant="ghost" size="sm">Gestionar</Button>
+                                <CardTitle>Agenda de Pagos</CardTitle>
+                                <Link :href="route('fixed-expenses.index')">
+                                    <Badge variant="outline" class="cursor-pointer hover:bg-muted">Administrar</Badge>
                                 </Link>
                             </div>
-                            <CardDescription>Progreso de tus presupuestos mensuales</CardDescription>
+                            <CardDescription>Proyección de pagos basada en tus fechas de corte y gastos fijos.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div class="space-y-4">
-                                <div v-for="budget in budgets" :key="budget.id" class="space-y-2">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center gap-2">
-                                            <div
-                                                class="h-3 w-3 rounded-full"
-                                                :style="{ backgroundColor: budget.category_color }"
-                                            />
-                                            <span class="text-sm font-medium">{{ budget.category_name }}</span>
+                                <div v-for="item in monthlyCalendar" :key="item.id + item.type" class="flex items-center justify-between border-b pb-2 last:border-0">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex flex-col items-center justify-center w-10 h-10 rounded-md bg-muted">
+                                            <span class="text-xs font-bold text-muted-foreground">DIA</span>
+                                            <span class="text-sm font-bold">{{ item.day }}</span>
                                         </div>
-                                        <span class="text-sm text-muted-foreground">
-                                            {{ formatCurrency(budget.spent) }} / {{ formatCurrency(budget.amount) }}
-                                        </span>
+                                        <div>
+                                            <p class="text-sm font-medium leading-none">{{ item.name }}</p>
+                                            <p class="text-xs text-muted-foreground capitalize">
+                                                {{ item.type === 'fixed_expense' ? 'Gasto Fijo' : item.type.replace('_', ' ') }}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <Progress
-                                        :model-value="budget.percentage"
-                                        :class="{
-                                            '[&>div]:bg-green-500': budget.status === 'ok',
-                                            '[&>div]:bg-yellow-500': budget.status === 'warning',
-                                            '[&>div]:bg-red-500': budget.status === 'over',
-                                        }"
-                                    />
+                                    <div class="text-right">
+                                        <p class="text-sm font-bold">{{ formatCurrency(item.amount) }}</p>
+                                        <p class="text-[10px] text-muted-foreground" v-if="item.type === 'credit_card'">
+                                            Total MSI
+                                        </p>
+                                    </div>
                                 </div>
-                                <div v-if="budgets.length === 0" class="py-8 text-center text-muted-foreground">
-                                    No tienes presupuestos configurados
-                                    <Link :href="route('budgets.index')" class="block mt-2 text-primary">
-                                        Crear presupuesto
-                                    </Link>
+                                <div v-if="monthlyCalendar.length === 0" class="py-6 text-center text-muted-foreground">
+                                    No hay pagos proyectados para este mes.
                                 </div>
                             </div>
                         </CardContent>

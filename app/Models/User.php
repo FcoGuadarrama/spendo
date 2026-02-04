@@ -72,6 +72,11 @@ class User extends Authenticatable
         return $this->hasMany(Debt::class);
     }
 
+    public function fixedExpenses(): HasMany
+    {
+        return $this->hasMany(FixedExpense::class);
+    }
+
     // ─────────────────────────────────────────────────────────────
     // Helpers
     // ─────────────────────────────────────────────────────────────

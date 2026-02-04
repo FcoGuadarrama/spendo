@@ -78,6 +78,7 @@ class TransactionController extends Controller
             'date' => 'required|date',
             'time' => 'nullable|date_format:H:i',
             'is_confirmed' => 'boolean',
+            'is_recurring' => 'boolean',
         ]);
 
         $request->user()->transactions()->create($validated);
@@ -117,6 +118,7 @@ class TransactionController extends Controller
             'date' => 'required|date',
             'time' => 'nullable|date_format:H:i',
             'is_confirmed' => 'boolean',
+            'is_recurring' => 'boolean',
         ]);
 
         $transaction->update($validated);

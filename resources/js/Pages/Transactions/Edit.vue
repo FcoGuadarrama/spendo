@@ -29,6 +29,7 @@ interface Transaction {
     debt_id: number | null
     notes: string
     is_confirmed: boolean
+    is_recurring: boolean
 }
 
 const props = defineProps<{
@@ -49,6 +50,7 @@ const form = ref({
     debt_id: props.transaction.debt_id || null, // Assuming debt_id is available in transaction prop. We need to check interface.
     notes: props.transaction.notes,
     is_confirmed: props.transaction.is_confirmed,
+    is_recurring: props.transaction.is_recurring,
 })
 
 const errors = ref<Record<string, string>>({})
@@ -184,6 +186,18 @@ const submit = () => {
                                 class="mt-1 w-full rounded-md border border-input bg-background px-3 py-2"
                                 rows="3"
                             />
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <input
+                                id="is_recurring"
+                                v-model="form.is_recurring"
+                                type="checkbox"
+                                class="h-4 w-4 rounded border-gray-300"
+                            />
+                            <Label for="is_recurring" class="mb-0 cursor-pointer">
+                                Gasto Recurrente (se paga mensualmente)
+                            </Label>
                         </div>
 
                         <div class="flex items-center gap-2">
