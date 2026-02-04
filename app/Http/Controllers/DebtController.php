@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Account;
 use App\Models\Debt;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,8 +22,8 @@ class DebtController extends Controller
                     'name' => $debt->name,
                     'total_amount' => $debt->total_amount,
                     'remaining_amount' => $debt->remaining_amount,
-                    'paid_percentage' => $debt->total_amount > 0 
-                        ? round((($debt->total_amount - $debt->remaining_amount) / $debt->total_amount) * 100, 1) 
+                    'paid_percentage' => $debt->total_amount > 0
+                        ? round((($debt->total_amount - $debt->remaining_amount) / $debt->total_amount) * 100, 1)
                         : 0,
                     'monthly_payment' => $debt->monthly_payment,
                     'next_payment_date' => $this->calculateNextPaymentDate($debt),

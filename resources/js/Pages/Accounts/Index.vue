@@ -12,10 +12,22 @@ import {
     TableHeader,
     TableRow,
 } from '@/Components/ui/table'
-import { PlusIcon, WalletIcon, DollarSignIcon, EditIcon } from 'lucide-vue-next'
+import { Progress } from '@/Components/ui/progress'
+import { PlusIcon, WalletIcon, DollarSignIcon, EditIcon, CreditCardIcon } from 'lucide-vue-next'
 import { toast } from '@/Components/ui/toast/use-toast'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import DeleteButton from "@/Components/DeleteButton.vue";
+
+interface CreditCardData {
+    credit_limit: number
+    statement_balance: number
+    available_credit: number
+    credit_utilization: number
+    monthly_payment: number
+    total_debt: number
+    due_day: number | null
+    closing_day: number | null
+}
 
 interface Account {
     id: number
@@ -27,14 +39,33 @@ interface Account {
     icon: string
     is_active: boolean
     transactions_count: number
+    credit_limit?: number
+    statement_balance?: number
+    available_credit?: number
+    credit_utilization?: number
+    monthly_payment?: number
+    total_debt?: number
+    due_day?: number | null
+    closing_day?: number | null
 }
 
 const props = defineProps<{
     accounts: Account[]
 }>()
 
+const creditCards = computed(() => props.accounts.filter(a => a.type === 'credit_card'))
+const otherAccounts = computed(() => props.accounts.filter(a => a.type !== 'credit_card'))
+
 const totalBalance = computed(() => {
-    return props.accounts.reduce((sum, a) => sum + Number(a.balance || 0), 0)
+    return otherAccounts.value.reduce((sum, a) => sum + Number(a.balance || 0), 0)
+})
+
+const totalCreditDebt = computed(() => {
+    return creditCards.value.reduce((sum, a) => sum + Number(a.total_debt || 0), 0)
+})
+
+const totalMonthlyPayment = computed(() => {
+    return creditCards.value.reduce((sum, a) => sum + Number(a.monthly_payment || 0), 0)
 })
 
 const totalTransactions = computed(() => {
@@ -73,6 +104,12 @@ const confirmDelete = (accountId: number) => {
         },
     })
 }
+
+const getUtilizationColor = (utilization: number) => {
+    if (utilization > 90) return 'text-red-600'
+    if (utilization > 70) return 'text-orange-600'
+    return 'text-green-600'
+}
 </script>
 
 <template>
@@ -110,7 +147,7 @@ const confirmDelete = (accountId: number) => {
                 </Card>
                 <Card>
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-sm font-medium">Balance Total</CardTitle>
+                        <CardTitle class="text-sm font-medium">Balance Total (Cuentas)</CardTitle>
                         <DollarSignIcon class="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
@@ -131,10 +168,124 @@ const confirmDelete = (accountId: number) => {
                 </Card>
             </div>
 
-            <!-- Accounts Table -->
+            <!-- Credit Cards Summary -->
+            <div v-if="creditCards.length > 0" class="grid gap-4 md:grid-cols-3">
+                <Card class="border-orange-200 dark:border-orange-900">
+                    <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle class="text-sm font-medium">Deuda Total (TDC)</CardTitle>
+                        <CreditCardIcon class="h-4 w-4 text-orange-600" />
+                    </CardHeader>
+                    <CardContent>
+                        <div class="text-2xl font-bold text-orange-600">
+                            {{ formatCurrency(totalCreditDebt) }}
+                        </div>
+                        <p class="text-xs text-muted-foreground">
+                            Incluyendo MSI activos
+                        </p>
+                    </CardContent>
+                </Card>
+                <Card class="border-blue-200 dark:border-blue-900">
+                    <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle class="text-sm font-medium">Pago Mensual Total (TDC)</CardTitle>
+                        <DollarSignIcon class="h-4 w-4 text-blue-600" />
+                    </CardHeader>
+                    <CardContent>
+                        <div class="text-2xl font-bold text-blue-600">
+                            {{ formatCurrency(totalMonthlyPayment) }}
+                        </div>
+                        <p class="text-xs text-muted-foreground">
+                            Suma de todos los MSI
+                        </p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle class="text-sm font-medium">Tarjetas de Crédito</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div class="text-2xl font-bold">
+                            {{ creditCards.length }}
+                        </div>
+                        <p class="text-xs text-muted-foreground">
+                            Activas
+                        </p>
+                    </CardContent>
+                </Card>
+            </div>
+
+            <!-- Credit Cards Detailed View -->
+            <div v-if="creditCards.length > 0" class="space-y-4">
+                <h3 class="text-lg font-semibold">Tarjetas de Crédito Detalladas</h3>
+                <div class="grid gap-4 md:grid-cols-2">
+                    <Card v-for="card in creditCards" :key="card.id" class="border-l-4 border-orange-500">
+                        <CardHeader class="pb-3">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <CardTitle class="text-base">{{ card.name }}</CardTitle>
+                                    <CardDescription class="mt-1 flex gap-2">
+                                        <Badge v-if="card.is_active" variant="outline" class="text-xs">Activa</Badge>
+                                        <Badge v-else variant="secondary" class="text-xs">Inactiva</Badge>
+                                    </CardDescription>
+                                </div>
+                                <Link :href="route('accounts.edit', card.id)">
+                                    <Button size="icon" variant="ghost" class="h-8 w-8">
+                                        <EditIcon class="h-4 w-4" />
+                                    </Button>
+                                </Link>
+                            </div>
+                        </CardHeader>
+                        <CardContent class="space-y-4">
+                            <!-- Limit & Usage -->
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-muted-foreground">Límite de Crédito</span>
+                                    <span class="font-semibold">{{ formatCurrency(card.credit_limit) }}</span>
+                                </div>
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-muted-foreground">Utilización</span>
+                                    <span :class="['font-semibold', getUtilizationColor(card.credit_utilization)]">
+                                        {{ card.credit_utilization.toFixed(1) }}%
+                                    </span>
+                                </div>
+                                <Progress :model-value="card.credit_utilization" class="h-2" />
+                            </div>
+
+                            <!-- Debt Information -->
+                            <div class="border-t pt-3 space-y-2">
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-muted-foreground">Deuda Total</span>
+                                    <span class="font-bold text-orange-600">{{ formatCurrency(card.total_debt) }}</span>
+                                </div>
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-muted-foreground">Crédito Disponible</span>
+                                    <span class="font-bold text-green-600">{{ formatCurrency(card.available_credit) }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Payment Information -->
+                            <div class="border-t pt-3 space-y-2">
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-muted-foreground">Pago Mensual (MSI)</span>
+                                    <span class="font-bold text-blue-600">{{ formatCurrency(card.monthly_payment) }}</span>
+                                </div>
+                                <div v-if="card.closing_day || card.due_day" class="flex items-center justify-between text-sm">
+                                    <span class="text-muted-foreground">Ciclo de Facturación</span>
+                                    <span class="text-xs">
+                                        <span v-if="card.closing_day">Cierre: Día {{ card.closing_day }}</span>
+                                        <span v-if="card.closing_day && card.due_day"> | </span>
+                                        <span v-if="card.due_day">Pago: Día {{ card.due_day }}</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+
+            <!-- Other Accounts Table -->
             <Card>
                 <CardHeader>
-                    <CardTitle>Mis Cuentas</CardTitle>
+                    <CardTitle>{{ otherAccounts.length > 0 ? 'Otras Cuentas' : 'Mis Cuentas' }}</CardTitle>
                     <CardDescription>
                         Gestiona tus cuentas y visualiza sus saldos
                     </CardDescription>
@@ -154,7 +305,7 @@ const confirmDelete = (accountId: number) => {
                             </TableHeader>
                             <TableBody>
                                 <TableRow
-                                    v-for="account in accounts"
+                                    v-for="account in otherAccounts"
                                     :key="account.id"
                                 >
                                     <TableCell class="font-medium">{{ account.name }}</TableCell>
@@ -190,8 +341,8 @@ const confirmDelete = (accountId: number) => {
                                 </TableRow>
                             </TableBody>
                         </Table>
-                        <div v-if="accounts.length === 0" class="py-8 text-center text-muted-foreground">
-                            No tienes cuentas configuradas. Crea una para empezar.
+                        <div v-if="otherAccounts.length === 0" class="py-8 text-center text-muted-foreground">
+                            No tienes otras cuentas configuradas.
                         </div>
                     </div>
                 </CardContent>

@@ -16,7 +16,34 @@ class AccountController extends Controller
             ->accounts()
             ->withCount('transactions')
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->map(function ($account) {
+                $data = [
+                    'id' => $account->id,
+                    'name' => $account->name,
+                    'type' => $account->type,
+                    'balance' => $account->balance,
+                    'currency' => $account->currency,
+                    'color' => $account->color,
+                    'icon' => $account->icon,
+                    'is_active' => $account->is_active,
+                    'transactions_count' => $account->transactions_count,
+                ];
+
+                // Agregar información de tarjeta de crédito si es aplicable
+                if ($account->isCreditCard()) {
+                    $data['credit_limit'] = $account->credit_limit;
+                    $data['statement_balance'] = $account->statement_balance;
+                    $data['available_credit'] = $account->getAvailableCreditBalance();
+                    $data['credit_utilization'] = $account->getCreditUtilization();
+                    $data['monthly_payment'] = $account->getTotalMonthlyPayment();
+                    $data['total_debt'] = $account->getTotalOutstandingDebt();
+                    $data['due_day'] = $account->due_day;
+                    $data['closing_day'] = $account->closing_day;
+                }
+
+                return $data;
+            });
 
         return Inertia::render('Accounts/Index', [
             'accounts' => $accounts,

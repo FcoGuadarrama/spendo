@@ -139,4 +139,108 @@ class Account extends Model
         $this->saveQuietly();
     }
 
+    // ─────────────────────────────────────────────────────────────
+    // Credit Card Statement Methods
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Get the total monthly payment for this credit card
+     * This is the sum of all MSI debts for this card
+     */
+    public function getTotalMonthlyPayment(): float
+    {
+        if (!$this->isCreditCard()) {
+            return 0;
+        }
+
+        return (float) $this->debts()
+            ->where('type', 'credit_card')
+            ->where('remaining_amount', '>', 0)
+            ->sum('monthly_payment');
+    }
+
+    /**
+     * Get total outstanding debt (MSI + current balance)
+     */
+    public function getTotalOutstandingDebt(): float
+    {
+        if (!$this->isCreditCard()) {
+            return 0;
+        }
+
+        // Sum of all active debts + current statement balance
+        $totalMSI = $this->debts()
+            ->where('type', 'credit_card')
+            ->where('remaining_amount', '>', 0)
+            ->sum('remaining_amount');
+
+        return (float) ($totalMSI + abs($this->statement_balance));
+    }
+
+    /**
+     * Calculate and update the statement balance for the billing period
+     * This includes all transactions since last closing day + active debts
+     */
+    public function reconcileStatement(): void
+    {
+        if (!$this->isCreditCard() || !$this->closing_day) {
+            return;
+        }
+
+        // Get transactions from last closing date to today
+        $closingDay = $this->closing_day;
+        $now = now();
+
+        // Calculate the last closing date
+        $lastClosing = $now->copy();
+        if ($now->day >= $closingDay) {
+            $lastClosing->day($closingDay);
+        } else {
+            $lastClosing->subMonth()->day($closingDay);
+        }
+
+        // Get expenses since last closing
+        $transactionBalance = (float) $this->transactions()
+            ->where('type', 'expense')
+            ->where('is_confirmed', true)
+            ->where('date', '>=', $lastClosing->startOfDay())
+            ->sum('amount');
+
+        // Add active MSI debts for this period
+        $msiBalance = (float) $this->debts()
+            ->where('type', 'credit_card')
+            ->where('remaining_amount', '>', 0)
+            ->sum('remaining_amount');
+
+        // Update statement balance (negative = you owe)
+        $this->statement_balance = -($transactionBalance + $msiBalance);
+        $this->saveQuietly();
+    }
+
+    /**
+     * Get available credit (limit - what you've used)
+     */
+    public function getAvailableCreditBalance(): float
+    {
+        if (!$this->isCreditCard() || !$this->credit_limit) {
+            return 0;
+        }
+
+        $usedCredit = $this->getTotalOutstandingDebt();
+        return (float) ($this->credit_limit - abs($usedCredit));
+    }
+
+    /**
+     * Get credit utilization percentage
+     */
+    public function getCreditUtilization(): float
+    {
+        if (!$this->isCreditCard() || !$this->credit_limit) {
+            return 0;
+        }
+
+        $usedCredit = $this->getTotalOutstandingDebt();
+        return (float) (abs($usedCredit) / $this->credit_limit * 100);
+    }
+
 }

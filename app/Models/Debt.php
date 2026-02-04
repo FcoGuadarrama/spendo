@@ -70,7 +70,7 @@ class Debt extends Model
         // Logic: Total Amount - Paid Amount = Remaining Amount
         // Assuming transactions linked to debt are PAYMENTS towards it.
         $this->remaining_amount = $this->total_amount - $paidAmount;
-        
+
         if ($this->remaining_amount <= 0) {
             $this->remaining_amount = 0;
             if (!$this->closed_at) {
@@ -80,6 +80,41 @@ class Debt extends Model
             $this->closed_at = null;
         }
 
+        $this->saveQuietly();
+    }
+
+    /**
+     * Calculate monthly payment based on total amount and installments
+     * Call this after updating total_amount or total_installments
+     */
+    public function calculateMonthlyPayment(): void
+    {
+        if ($this->total_installments && $this->total_installments > 0) {
+            $this->monthly_payment = $this->total_amount / $this->total_installments;
+            $this->saveQuietly();
+        }
+    }
+
+    /**
+     * Recalculate monthly payment based on remaining amount and remaining months
+     */
+    public function recalculateMonthlyPayment(): void
+    {
+        if (!$this->end_date) {
+            return;
+        }
+
+        $today = now()->startOfDay();
+        $endDate = $this->end_date->startOfDay();
+
+        if ($today >= $endDate) {
+            $this->monthly_payment = $this->remaining_amount;
+            $this->saveQuietly();
+            return;
+        }
+
+        $monthsRemaining = max(1, $today->diffInMonths($endDate) + 1);
+        $this->monthly_payment = $this->remaining_amount / $monthsRemaining;
         $this->saveQuietly();
     }
 }
