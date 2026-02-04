@@ -85,12 +85,33 @@ class Account extends Model
 
     public function updateBalance(): void
     {
-        $income = $this->transactions()->where('type', 'income')->sum('amount');
-        $expense = $this->transactions()->where('type', 'expense')->sum('amount');
-        $transfersOut = $this->transactions()->where('type', 'transfer')->sum('amount');
-        $transfersIn = $this->incomingTransfers()->sum('amount');
+        $initialBalance = $this->getOriginal('balance') ?? 0;
 
-        $this->balance = $income - $expense - $transfersOut + $transfersIn;
-        $this->save();
+        if ($this->transactions()->exists() || $this->incomingTransfers()->exists()) {
+            $income = $this->transactions()
+                ->where('type', 'income')
+                ->where('is_confirmed', true)
+                ->sum('amount');
+
+            $expenses = $this->transactions()
+                ->where('type', 'expense')
+                ->where('is_confirmed', true)
+                ->sum('amount');
+
+            $transfersIn = Transaction::where('transfer_to_account_id', $this->id)
+                ->where('type', 'transfer')
+                ->where('is_confirmed', true)
+                ->sum('amount');
+
+            $transfersOut = $this->transactions()
+                ->where('type', 'transfer')
+                ->where('is_confirmed', true)
+                ->sum('amount');
+
+            $this->balance = $initialBalance + $income - $expenses + $transfersIn - $transfersOut;
+        }
+
+        $this->saveQuietly();
     }
+
 }

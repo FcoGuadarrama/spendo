@@ -12,20 +12,9 @@ import {
     TableHeader,
     TableRow,
 } from '@/Components/ui/table'
-import { PlusIcon, WalletIcon, DollarSignIcon, EditIcon, TrashIcon } from 'lucide-vue-next'
+import { PlusIcon, WalletIcon, DollarSignIcon, EditIcon } from 'lucide-vue-next'
 import { toast } from '@/Components/ui/toast/use-toast'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-} from '@/Components/ui/alert-dialog'
 import DeleteButton from "@/Components/DeleteButton.vue";
 
 interface Account {
