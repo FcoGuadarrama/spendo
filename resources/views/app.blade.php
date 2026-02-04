@@ -1,5 +1,9 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" style="--radius: 0.5rem;">
+<html
+    lang="{{ str_replace('_', '-', app()->getLocale()) }}"
+    class="dark"
+    style="--radius: 0.5rem;"
+>
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,6 +18,20 @@
         @routes
         @vite(['resources/js/app.ts', "resources/js/Pages/{$page['component']}.vue"])
         @inertiaHead
+	<script>
+    (function () {
+        const theme = localStorage.getItem('theme');
+
+        if (
+            theme === 'dark' ||
+            (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        ) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    })();
+</script>
     </head>
     <body class="font-sans antialiased">
         @inertia

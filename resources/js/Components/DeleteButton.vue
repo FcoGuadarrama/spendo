@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import {Button} from "@/components/ui/button";
+import {Button} from "@/Components/ui/button";
 import {
     AlertDialog,
     AlertDialogAction, AlertDialogCancel,
