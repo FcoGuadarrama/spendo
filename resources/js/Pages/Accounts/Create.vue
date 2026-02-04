@@ -17,6 +17,8 @@ const form = ref({
     color: '#3b82f6',
     icon: 'wallet',
     include_in_total: true,
+    closing_day: null as number | null,
+    due_day: null as number | null,
 })
 
 const errors = ref<Record<string, string>>({})
@@ -124,6 +126,35 @@ const submit = () => {
                                     :class="{ 'border-red-500': errors.credit_limit }"
                                 />
                                 <p v-if="errors.credit_limit" class="mt-1 text-sm text-red-600">{{ errors.credit_limit }}</p>
+                            </div>
+                        </div>
+
+                        <div v-if="form.type === 'credit_card'" class="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label for="closing_day">Día de Corte</Label>
+                                <Input
+                                    id="closing_day"
+                                    :model-value="form.closing_day"
+                                    @update:model-value="(v) => form.closing_day = v === '' ? null : Number(v)"
+                                    type="number"
+                                    min="1"
+                                    max="31"
+                                    placeholder="Ej. 5"
+                                    class="mt-1"
+                                />
+                            </div>
+                            <div>
+                                <Label for="due_day">Día Límite de Pago</Label>
+                                <Input
+                                    id="due_day"
+                                    :model-value="form.due_day"
+                                    @update:model-value="(v) => form.due_day = v === '' ? null : Number(v)"
+                                    type="number"
+                                    min="1"
+                                    max="31"
+                                    placeholder="Ej. 25"
+                                    class="mt-1"
+                                />
                             </div>
                         </div>
 

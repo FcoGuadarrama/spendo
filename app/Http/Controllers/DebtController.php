@@ -36,13 +36,19 @@ class DebtController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('Debts/Create');
+        $creditCards = auth()->user()->accounts()->where('type', 'credit_card')->orderBy('name')->get();
+
+        return Inertia::render('Debts/Create', [
+            'creditCards' => $creditCards,
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'type' => 'required|in:loan,credit_card',
+            'account_id' => 'nullable|required_if:type,credit_card|exists:accounts,id',
             'total_amount' => 'required|numeric|min:0.01',
             'remaining_amount' => 'required|numeric|min:0|lte:total_amount',
             'monthly_payment' => 'nullable|numeric|min:0',
@@ -62,8 +68,11 @@ class DebtController extends Controller
     {
         $this->authorize('update', $debt);
 
+        $creditCards = auth()->user()->accounts()->where('type', 'credit_card')->orderBy('name')->get();
+
         return Inertia::render('Debts/Edit', [
             'debt' => $debt,
+            'creditCards' => $creditCards,
         ]);
     }
 
@@ -73,6 +82,8 @@ class DebtController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'type' => 'required|in:loan,credit_card',
+            'account_id' => 'nullable|required_if:type,credit_card|exists:accounts,id',
             'total_amount' => 'required|numeric|min:0.01',
             'remaining_amount' => 'required|numeric|min:0|lte:total_amount',
             'monthly_payment' => 'nullable|numeric|min:0',

@@ -23,6 +23,8 @@ class Account extends Model
         'icon',
         'is_active',
         'include_in_total',
+        'closing_day',
+        'due_day',
     ];
 
     protected $casts = [
@@ -30,6 +32,8 @@ class Account extends Model
         'credit_limit' => 'decimal:2',
         'is_active' => 'boolean',
         'include_in_total' => 'boolean',
+        'closing_day' => 'integer',
+        'due_day' => 'integer',
     ];
 
     // ─────────────────────────────────────────────────────────────
@@ -39,6 +43,11 @@ class Account extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function debts(): HasMany
+    {
+        return $this->hasMany(Debt::class);
     }
 
     public function transactions(): HasMany
@@ -63,6 +72,11 @@ class Account extends Model
     public function scopeIncludedInTotal($query)
     {
         return $query->where('include_in_total', true);
+    }
+
+    public function scopeCreditCards($query)
+    {
+        return $query->where('type', 'credit_card');
     }
 
     // ─────────────────────────────────────────────────────────────

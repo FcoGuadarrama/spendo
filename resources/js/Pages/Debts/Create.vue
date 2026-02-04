@@ -18,7 +18,18 @@ const form = useForm({
     due_day: '',
     total_installments: '',
     notes: '',
+    type: 'loan',
+    account_id: null,
 })
+
+interface Account {
+    id: number
+    name: string
+}
+
+defineProps<{
+    creditCards: Account[]
+}>()
 
 const submit = () => {
     form.post(route('debts.store'))
@@ -57,6 +68,36 @@ const onTotalChange = (e: Event) => {
                 </CardHeader>
                 <CardContent>
                     <form @submit.prevent="submit" class="space-y-6">
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <div class="space-y-2">
+                                <Label for="type">Tipo de Deuda</Label>
+                                <select
+                                    id="type"
+                                    v-model="form.type"
+                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    <option value="loan">Préstamo Personal / Otro</option>
+                                    <option value="credit_card">Tarjeta de Crédito (MSI / Diferido)</option>
+                                </select>
+                                <p v-if="form.errors.type" class="text-sm text-red-500">{{ form.errors.type }}</p>
+                            </div>
+
+                            <div v-if="form.type === 'credit_card'" class="space-y-2">
+                                <Label for="account_id">Tarjeta de Crédito</Label>
+                                <select
+                                    id="account_id"
+                                    v-model="form.account_id"
+                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    <option :value="null">Selecciona una tarjeta</option>
+                                    <option v-for="card in creditCards" :key="card.id" :value="card.id">
+                                        {{ card.name }}
+                                    </option>
+                                </select>
+                                <p v-if="form.errors.account_id" class="text-sm text-red-500">{{ form.errors.account_id }}</p>
+                            </div>
+                        </div>
+
                         <div class="space-y-2">
                             <Label for="name">Nombre / Concepto</Label>
                             <Input

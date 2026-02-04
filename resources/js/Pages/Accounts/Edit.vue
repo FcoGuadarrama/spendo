@@ -19,6 +19,8 @@ interface Account {
     icon: string
     include_in_total: boolean
     is_active: boolean
+    closing_day: number | null
+    due_day: number | null
 }
 
 const props = defineProps<{
@@ -35,6 +37,8 @@ const form = ref({
     icon: props.account.icon,
     include_in_total: props.account.include_in_total,
     is_active: props.account.is_active,
+    closing_day: props.account.closing_day,
+    due_day: props.account.due_day,
 })
 
 const errors = ref<Record<string, string>>({})
@@ -138,6 +142,35 @@ const submit = () => {
                                     :class="{ 'border-red-500': errors.credit_limit }"
                                 />
                                 <p v-if="errors.credit_limit" class="mt-1 text-sm text-red-600">{{ errors.credit_limit }}</p>
+                            </div>
+                        </div>
+
+                        <div v-if="form.type === 'credit_card'" class="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label for="closing_day">Día de Corte</Label>
+                                <Input
+                                    id="closing_day"
+                                    :model-value="form.closing_day"
+                                    @update:model-value="(v) => form.closing_day = v === '' ? null : Number(v)"
+                                    type="number"
+                                    min="1"
+                                    max="31"
+                                    placeholder="Ej. 5"
+                                    class="mt-1"
+                                />
+                            </div>
+                            <div>
+                                <Label for="due_day">Día Límite de Pago</Label>
+                                <Input
+                                    id="due_day"
+                                    :model-value="form.due_day"
+                                    @update:model-value="(v) => form.due_day = v === '' ? null : Number(v)"
+                                    type="number"
+                                    min="1"
+                                    max="31"
+                                    placeholder="Ej. 25"
+                                    class="mt-1"
+                                />
                             </div>
                         </div>
 

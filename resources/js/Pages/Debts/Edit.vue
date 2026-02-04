@@ -19,10 +19,18 @@ interface Debt {
     due_day: number | null
     total_installments: number | null
     notes: string | null
+    type: string
+    account_id: number | null
+}
+
+interface Account {
+    id: number
+    name: string
 }
 
 const props = defineProps<{
     debt: Debt
+    creditCards: Account[]
 }>()
 
 const form = useForm({
@@ -35,6 +43,8 @@ const form = useForm({
     due_day: props.debt.due_day,
     total_installments: props.debt.total_installments,
     notes: props.debt.notes,
+    type: props.debt.type || 'loan',
+    account_id: props.debt.account_id,
 })
 
 const submit = () => {
@@ -66,6 +76,36 @@ const submit = () => {
                 </CardHeader>
                 <CardContent>
                     <form @submit.prevent="submit" class="space-y-6">
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <div class="space-y-2">
+                                <Label for="type">Tipo de Deuda</Label>
+                                <select
+                                    id="type"
+                                    v-model="form.type"
+                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    <option value="loan">Préstamo Personal / Otro</option>
+                                    <option value="credit_card">Tarjeta de Crédito (MSI / Diferido)</option>
+                                </select>
+                                <p v-if="form.errors.type" class="text-sm text-red-500">{{ form.errors.type }}</p>
+                            </div>
+
+                            <div v-if="form.type === 'credit_card'" class="space-y-2">
+                                <Label for="account_id">Tarjeta de Crédito</Label>
+                                <select
+                                    id="account_id"
+                                    v-model="form.account_id"
+                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    <option :value="null">Selecciona una tarjeta</option>
+                                    <option v-for="card in creditCards" :key="card.id" :value="card.id">
+                                        {{ card.name }}
+                                    </option>
+                                </select>
+                                <p v-if="form.errors.account_id" class="text-sm text-red-500">{{ form.errors.account_id }}</p>
+                            </div>
+                        </div>
+
                         <div class="space-y-2">
                             <Label for="name">Nombre / Concepto</Label>
                             <Input
@@ -110,7 +150,8 @@ const submit = () => {
                                     id="monthly_payment"
                                     type="number"
                                     step="0.01"
-                                    v-model="form.monthly_payment"
+                                    :model-value="form.monthly_payment"
+                                    @update:model-value="(v) => form.monthly_payment = v === '' ? null : Number(v)"
                                 />
                                 <p v-if="form.errors.monthly_payment" class="text-sm text-red-500">{{ form.errors.monthly_payment }}</p>
                             </div>
@@ -122,7 +163,8 @@ const submit = () => {
                                     type="number"
                                     min="1"
                                     max="31"
-                                    v-model="form.due_day"
+                                    :model-value="form.due_day"
+                                    @update:model-value="(v) => form.due_day = v === '' ? null : Number(v)"
                                 />
                                 <p v-if="form.errors.due_day" class="text-sm text-red-500">{{ form.errors.due_day }}</p>
                             </div>
@@ -145,7 +187,8 @@ const submit = () => {
                                 <Input
                                     id="end_date"
                                     type="date"
-                                    v-model="form.end_date"
+                                    :model-value="form.end_date"
+                                    @update:model-value="(v) => form.end_date = v === '' ? null : String(v)"
                                 />
                                 <p v-if="form.errors.end_date" class="text-sm text-red-500">{{ form.errors.end_date }}</p>
                             </div>
@@ -156,7 +199,8 @@ const submit = () => {
                              <Input
                                  id="total_installments"
                                  type="number"
-                                 v-model="form.total_installments"
+                                 :model-value="form.total_installments"
+                                 @update:model-value="(v) => form.total_installments = v === '' ? null : Number(v)"
                                  placeholder="Ej. 12, 24, 36"
                              />
                              <p v-if="form.errors.total_installments" class="text-sm text-red-500">{{ form.errors.total_installments }}</p>
@@ -166,7 +210,8 @@ const submit = () => {
                             <Label for="notes">Notas</Label>
                             <Textarea
                                 id="notes"
-                                v-model="form.notes"
+                                :model-value="form.notes"
+                                @update:model-value="(v) => form.notes = v === '' ? null : String(v)"
                             />
                             <p v-if="form.errors.notes" class="text-sm text-red-500">{{ form.errors.notes }}</p>
                         </div>

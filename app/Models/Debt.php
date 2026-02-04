@@ -24,6 +24,8 @@ class Debt extends Model
         'total_installments',
         'notes',
         'closed_at',
+        'type',
+        'account_id',
     ];
 
     protected $casts = [
@@ -33,6 +35,7 @@ class Debt extends Model
         'start_date' => 'date',
         'end_date' => 'date',
         'closed_at' => 'datetime',
+        'account_id' => 'integer',
     ];
 
     // ─────────────────────────────────────────────────────────────
@@ -42,6 +45,11 @@ class Debt extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function account(): BelongsTo
+    {
+        return $this->belongsTo(Account::class);
     }
 
     public function transactions(): HasMany

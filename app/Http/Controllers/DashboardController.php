@@ -109,14 +109,21 @@ class DashboardController extends Controller
             ]);
         }
 
-        // Debts
-        $activeDebts = $user->debts()
+        // Debts Separation
+        $allActiveDebts = $user->debts()
             ->where('remaining_amount', '>', 0)
             ->orderBy('remaining_amount', 'desc')
             ->get();
 
-        $totalDebt = $activeDebts->sum('remaining_amount');
-        $totalMonthlyDebt = $activeDebts->sum('monthly_payment');
+        $personalDebts = $allActiveDebts->where('type', 'loan');
+        $creditCardDebts = $allActiveDebts->where('type', 'credit_card');
+
+        // Totals
+        $totalPersonalDebt = $personalDebts->sum('remaining_amount');
+        $totalPersonalMonthly = $personalDebts->sum('monthly_payment');
+
+        $totalCCDebt = $creditCardDebts->sum('remaining_amount'); // MSI remaining
+        $totalCCMonthly = $creditCardDebts->sum('monthly_payment'); // MSI monthly payment
 
         return Inertia::render('Dashboard', [
             'accounts' => $accounts,
@@ -131,9 +138,11 @@ class DashboardController extends Controller
             'currentMonth' => $now->format('F Y'),
             'year' => $year,
             'month' => $month,
-            'debts' => $activeDebts,
-            'totalDebt' => $totalDebt,
-            'totalMonthlyDebt' => $totalMonthlyDebt,
+            'debts' => $allActiveDebts->values(), // Send all for list, or maybe just personal? Let's send all but marked.
+            'totalPersonalDebt' => $totalPersonalDebt,
+            'totalPersonalMonthly' => $totalPersonalMonthly,
+            'totalCCDebt' => $totalCCDebt,
+            'totalCCMonthly' => $totalCCMonthly,
         ]);
     }
 }
