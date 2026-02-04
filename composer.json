@@ -6,12 +6,12 @@
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.5",
         "inertiajs/inertia-laravel": "^2.0",
-        "laravel/breeze": "^2.3",
-        "laravel/framework": "^11.31",
+        "laravel/breeze": "^2.4",
+        "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.0",
-        "laravel/tinker": "^2.9",
+        "laravel/tinker": "^2.10",
         "tightenco/ziggy": "^2.0"
     },
     "require-dev": {
@@ -71,6 +71,6 @@
             "php-http/discovery": true
         }
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -44,5 +45,58 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function accounts(): HasMany
+    {
+        return $this->hasMany(Account::class);
+    }
+
+    public function categories(): HasMany
+    {
+        return $this->hasMany(Category::class);
+    }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    public function budgets(): HasMany
+    {
+        return $this->hasMany(Budget::class);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Helpers
+    // ─────────────────────────────────────────────────────────────
+
+    public function getTotalBalance(): float
+    {
+        return $this->accounts()
+            ->active()
+            ->includedInTotal()
+            ->sum('balance');
+    }
+
+    public function getMonthlyIncome(int $year, int $month): float
+    {
+        return $this->transactions()
+            ->income()
+            ->forMonth($year, $month)
+            ->sum('amount');
+    }
+
+    public function getMonthlyExpenses(int $year, int $month): float
+    {
+        return $this->transactions()
+            ->expense()
+            ->forMonth($year, $month)
+            ->sum('amount');
+    }
+
+    public function getMonthlySavings(int $year, int $month): float
+    {
+        return $this->getMonthlyIncome($year, $month) - $this->getMonthlyExpenses($year, $month);
     }
 }

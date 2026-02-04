@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {
   Button,
-} from '@/components/ui/button'
+} from '@/Components/ui/button'
 import { cn } from '@/lib/utils'
 import { DoubleArrowRightIcon } from '@radix-icons/vue'
 import { PaginationLast, type PaginationLastProps } from 'radix-vue'

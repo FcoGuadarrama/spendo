@@ -1,0 +1,46 @@
+<script setup lang="ts">
+
+import {Button} from "@/components/ui/button";
+import {
+    AlertDialog,
+    AlertDialogAction, AlertDialogCancel,
+    AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger
+} from "@/Components/ui/alert-dialog";
+import {TrashIcon} from "lucide-vue-next";
+
+</script>
+
+<template>
+    <AlertDialog>
+        <AlertDialogTrigger as-child>
+            <Button
+                size="sm"
+                variant="destructive"
+            >
+                <TrashIcon class="h-4 w-4" />
+            </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete your
+                    account and remove your data from our servers.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                    @click="$emit('delete')"
+                >Continue</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+
+</template>
+
+<style scoped>
+
+</style>

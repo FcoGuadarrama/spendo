@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {
   Button,
-} from '@/components/ui/button'
+} from '@/Components/ui/button'
 import { cn } from '@/lib/utils'
 import { ChevronLeftIcon } from '@radix-icons/vue'
 import { PaginationPrev, type PaginationPrevProps } from 'radix-vue'

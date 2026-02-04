@@ -1,11 +1,6 @@
-<script setup lang=ts>
-import {
-    Avatar,
-    AvatarFallback,
-    AvatarImage,
-} from '@/Components/ui/avatar'
-import { Link } from '@inertiajs/vue3';
-import { Button } from "@/Components/ui/button";
+<script setup lang="ts">
+import { Avatar, AvatarFallback, AvatarImage } from '@/Components/ui/avatar'
+import { Link, usePage } from '@inertiajs/vue3'
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -14,12 +9,6 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from '@/Components/ui/breadcrumb'
-
-import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
-} from '@/Components/ui/collapsible'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -75,149 +64,85 @@ import {
     Sparkles,
     SquareTerminal,
     Trash2,
+    LayoutDashboard,
+    Wallet,
+    Tags,
+    Receipt,
+    Target,
+    User,
 } from 'lucide-vue-next'
-import { ref } from 'vue'
-import DarkModeDropdown from "@/Components/ui/dark-mode-dropdown/DarkModeDropdown.vue";
-import DropdownLink from "@/Components/DropdownLink.vue";
+import { computed, ref } from 'vue'
+import DarkModeDropdown from '@/Components/ui/dark-mode-dropdown/DarkModeDropdown.vue'
+import Toaster from '@/Components/ui/toast/Toaster.vue'
 
-// This is sample data.
-const data = {
-    user: {
-        name: 'shadcn',
-        email: 'm@example.com',
-        avatar: '/avatars/shadcn.jpg',
+type AuthUser = { name: string; email: string; avatar?: string | null }
+
+const page = usePage()
+const user = computed(() => page.props.auth?.user as AuthUser | null)
+
+// Sidebar principal de Spendo
+const navMain = computed(() => [
+    {
+        title: 'Panel',
+        url: route('dashboard'),
+        icon: LayoutDashboard,
+        isActive: route().current('dashboard'),
+        items: [],
     },
+    {
+        title: 'Transacciones',
+        url: route('transactions.index'),
+        icon: Receipt,
+        isActive: route().current('transactions.*'),
+        items: [],
+    },
+    {
+        title: 'Cuentas',
+        url: route('accounts.index'),
+        icon: Wallet,
+        isActive: route().current('accounts.*'),
+        items: [],
+    },
+    {
+        title: 'Categorías',
+        url: route('categories.index'),
+        icon: Tags,
+        isActive: route().current('categories.*'),
+        items: [],
+    },
+    {
+        title: 'Presupuestos',
+        url: route('budgets.index'),
+        icon: Target,
+        isActive: route().current('budgets.*'),
+        items: [],
+    },
+])
+
+// Equipos/proyectos siguen siendo de ejemplo visual
+const data = {
     teams: [
-        {
-            name: 'Acme Inc',
-            logo: GalleryVerticalEnd,
-            plan: 'Enterprise',
-        },
-        {
-            name: 'Acme Corp.',
-            logo: AudioWaveform,
-            plan: 'Startup',
-        },
-        {
-            name: 'Evil Corp.',
-            logo: Command,
-            plan: 'Free',
-        },
-    ],
-    navMain: [
-        {
-            title: 'Playground',
-            url: '#',
-            icon: SquareTerminal,
-            isActive: true,
-            items: [
-                {
-                    title: 'History',
-                    url: '#',
-                },
-                {
-                    title: 'Starred',
-                    url: '#',
-                },
-                {
-                    title: 'Settings',
-                    url: '#',
-                },
-            ],
-        },
-        {
-            title: 'Models',
-            url: '#',
-            icon: Bot,
-            items: [
-                {
-                    title: 'Genesis',
-                    url: '#',
-                },
-                {
-                    title: 'Explorer',
-                    url: '#',
-                },
-                {
-                    title: 'Quantum',
-                    url: '#',
-                },
-            ],
-        },
-        {
-            title: 'Documentation',
-            url: '#',
-            icon: BookOpen,
-            items: [
-                {
-                    title: 'Introduction',
-                    url: '#',
-                },
-                {
-                    title: 'Get Started',
-                    url: '#',
-                },
-                {
-                    title: 'Tutorials',
-                    url: '#',
-                },
-                {
-                    title: 'Changelog',
-                    url: '#',
-                },
-            ],
-        },
-        {
-            title: 'Settings',
-            url: '#',
-            icon: Settings2,
-            items: [
-                {
-                    title: 'General',
-                    url: '#',
-                },
-                {
-                    title: 'Team',
-                    url: '#',
-                },
-                {
-                    title: 'Billing',
-                    url: '#',
-                },
-                {
-                    title: 'Limits',
-                    url: '#',
-                },
-            ],
-        },
-    ],
-    projects: [
-        {
-            name: 'Design Engineering',
-            url: '#',
-            icon: Frame,
-        },
-        {
-            name: 'Sales & Marketing',
-            url: '#',
-            icon: PieChart,
-        },
-        {
-            name: 'Travel',
-            url: '#',
-            icon: Map,
-        },
+        { name: 'Spendo', logo: GalleryVerticalEnd, plan: 'Personal' },
     ],
 }
 
 const activeTeam = ref(data.teams[0])
 
-function setActiveTeam(team: typeof data.teams[number]) {
+function setActiveTeam(team: (typeof data.teams)[number]) {
     activeTeam.value = team
 }
+
+const initials = computed(() => {
+    const name = user.value?.name ?? 'Usuario'
+    const parts = name.trim().split(/\s+/).filter(Boolean)
+    const first = parts[0]?.[0] ?? 'U'
+    const second = parts[1]?.[0] ?? ''
+    return (first + second).toUpperCase()
+})
 </script>
 
 <template>
+    <Toaster />
     <SidebarProvider>
         <Sidebar collapsible="icon">
             <SidebarHeader>
@@ -246,7 +171,7 @@ function setActiveTeam(team: typeof data.teams[number]) {
                                 :side-offset="4"
                             >
                                 <DropdownMenuLabel class="text-xs text-muted-foreground">
-                                    Teams
+                                    Equipos
                                 </DropdownMenuLabel>
                                 <DropdownMenuItem
                                     v-for="(team, index) in data.teams"
@@ -260,57 +185,31 @@ function setActiveTeam(team: typeof data.teams[number]) {
                                     {{ team.name }}
                                     <DropdownMenuShortcut>⌘{{ index + 1 }}</DropdownMenuShortcut>
                                 </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem class="gap-2 p-2">
-                                    <div class="flex size-6 items-center justify-center rounded-md border bg-background">
-                                        <Plus class="size-4" />
-                                    </div>
-                                    <div class="font-medium text-muted-foreground">
-                                        Add team
-                                    </div>
-                                </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarHeader>
+
             <SidebarContent>
                 <SidebarGroup>
-                    <SidebarGroupLabel>Platform</SidebarGroupLabel>
+                    <SidebarGroupLabel>Spendo</SidebarGroupLabel>
                     <SidebarMenu>
-                        <Collapsible
-                            v-for="item in data.navMain"
+                        <SidebarMenuItem
+                            v-for="item in navMain"
                             :key="item.title"
-                            as-child
-                            :default-open="item.isActive"
-                            class="group/collapsible"
                         >
-                            <SidebarMenuItem>
-                                <CollapsibleTrigger as-child>
-                                    <SidebarMenuButton :tooltip="item.title">
-                                        <component :is="item.icon" />
-                                        <span>{{ item.title }}</span>
-                                        <ChevronRight class="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                                    </SidebarMenuButton>
-                                </CollapsibleTrigger>
-                                <CollapsibleContent>
-                                    <SidebarMenuSub>
-                                        <SidebarMenuSubItem
-                                            v-for="subItem in item.items"
-                                            :key="subItem.title"
-                                        >
-                                            <SidebarMenuSubButton as-child>
-                                                <a :href="subItem.url">
-                                                    <span>{{ subItem.title }}</span>
-                                                </a>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                    </SidebarMenuSub>
-                                </CollapsibleContent>
-                            </SidebarMenuItem>
-                        </Collapsible>
+                            <SidebarMenuButton as-child :class="item.isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground' : ''">
+                                <Link :href="item.url">
+                                    <component :is="item.icon" />
+                                    <span>{{ item.title }}</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
                     </SidebarMenu>
                 </SidebarGroup>
+
+                <!-- Projects demo (opcional, se puede quitar si no lo usas) -->
                 <SidebarGroup class="group-data-[collapsible=icon]:hidden">
                     <SidebarGroupLabel>Projects</SidebarGroupLabel>
                     <SidebarMenu>
@@ -324,39 +223,11 @@ function setActiveTeam(team: typeof data.teams[number]) {
                                     <span>{{ item.name }}</span>
                                 </a>
                             </SidebarMenuButton>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger as-child>
-                                    <SidebarMenuAction show-on-hover>
-                                        <MoreHorizontal />
-                                        <span class="sr-only">More</span>
-                                    </SidebarMenuAction>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent class="w-48 rounded-lg" side="bottom" align="end">
-                                    <DropdownMenuItem>
-                                        <Folder class="text-muted-foreground" />
-                                        <span>View Project</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem>
-                                        <Forward class="text-muted-foreground" />
-                                        <span>Share Project</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem>
-                                        <Trash2 class="text-muted-foreground" />
-                                        <span>Delete Project</span>
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </SidebarMenuItem>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton class="text-sidebar-foreground/70">
-                                <MoreHorizontal class="text-sidebar-foreground/70" />
-                                <span>More</span>
-                            </SidebarMenuButton>
                         </SidebarMenuItem>
                     </SidebarMenu>
                 </SidebarGroup>
             </SidebarContent>
+
             <SidebarFooter>
                 <SidebarMenu>
                     <SidebarMenuItem>
@@ -367,59 +238,66 @@ function setActiveTeam(team: typeof data.teams[number]) {
                                     class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                                 >
                                     <Avatar class="h-8 w-8 rounded-lg">
-                                        <AvatarImage :src="data.user.avatar" :alt="data.user.name" />
+                                        <AvatarImage
+                                            v-if="user?.avatar"
+                                            :src="user?.avatar as string"
+                                            :alt="user?.name ?? 'User'"
+                                        />
                                         <AvatarFallback class="rounded-lg">
-                                            CN
+                                            {{ initials }}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div class="grid flex-1 text-left text-sm leading-tight">
-                                        <span class="truncate font-semibold">{{ data.user.name }}</span>
-                                        <span class="truncate text-xs">{{ data.user.email }}</span>
+                                        <span class="truncate font-semibold">{{ user?.name ?? 'Usuario' }}</span>
+                                        <span class="truncate text-xs">{{ user?.email ?? '' }}</span>
                                     </div>
                                     <ChevronsUpDown class="ml-auto size-4" />
                                 </SidebarMenuButton>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent class="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg" side="bottom" align="end" :side-offset="4">
+                            <DropdownMenuContent
+                                class="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                                side="bottom"
+                                align="end"
+                                :side-offset="4"
+                            >
                                 <DropdownMenuLabel class="p-0 font-normal">
                                     <div class="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                                         <Avatar class="h-8 w-8 rounded-lg">
-                                            <AvatarImage :src="data.user.avatar" :alt="data.user.name" />
+                                            <AvatarImage
+                                                v-if="user?.avatar"
+                                                :src="user?.avatar as string"
+                                                :alt="user?.name ?? 'User'"
+                                            />
                                             <AvatarFallback class="rounded-lg">
-                                                CN
+                                                {{ initials }}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div class="grid flex-1 text-left text-sm leading-tight">
-                                            <span class="truncate font-semibold">{{ data.user.name }}</span>
-                                            <span class="truncate text-xs">{{ data.user.email }}</span>
+                                            <span class="truncate font-semibold">{{ user?.name ?? 'Usuario' }}</span>
+                                            <span class="truncate text-xs">{{ user?.email ?? '' }}</span>
                                         </div>
                                     </div>
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuGroup>
-                                    <DropdownMenuItem>
-                                        <Sparkles />
-                                        Upgrade to Pro
+                                    <DropdownMenuItem as-child>
+                                        <Link :href="route('profile.edit')" class="flex items-center gap-2">
+                                            <User class="size-4" />
+                                            Perfil
+                                        </Link>
                                     </DropdownMenuItem>
                                 </DropdownMenuGroup>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuGroup>
-                                    <DropdownMenuItem>
-                                        <BadgeCheck />
-                                        Account
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem>
-                                        <CreditCard />
-                                        Billing
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem>
-                                        <Bell />
-                                        Notifications
-                                    </DropdownMenuItem>
-                                </DropdownMenuGroup>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem>
-                                    <LogOut />
-                                    Log out
+                                <DropdownMenuItem as-child>
+                                    <Link
+                                        :href="route('logout')"
+                                        method="post"
+                                        as="button"
+                                        class="flex w-full items-center gap-2"
+                                    >
+                                        <LogOut class="size-4" />
+                                        Cerrar sesión
+                                    </Link>
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -428,8 +306,11 @@ function setActiveTeam(team: typeof data.teams[number]) {
             </SidebarFooter>
             <SidebarRail />
         </Sidebar>
+
         <SidebarInset>
-            <header class="flex h-16 shrink-0 items-center mr-6 gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+            <header
+                class="flex h-16 shrink-0 items-center mr-6 gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12"
+            >
                 <div class="flex items-center gap-2 px-4">
                     <SidebarTrigger class="-ml-1" />
                     <Separator orientation="vertical" class="mr-2 h-4" />
@@ -437,58 +318,39 @@ function setActiveTeam(team: typeof data.teams[number]) {
                         <BreadcrumbList>
                             <BreadcrumbItem class="hidden md:block">
                                 <BreadcrumbLink href="#">
-                                    Building Your Application
+                                    Spendo
                                 </BreadcrumbLink>
                             </BreadcrumbItem>
                             <BreadcrumbSeparator class="hidden md:block" />
                             <BreadcrumbItem>
-                                <BreadcrumbPage>Data Fetching</BreadcrumbPage>
+                                <BreadcrumbPage>
+                                    <!-- Slot opcional para un título más específico -->
+                                    <slot name="breadcrumb">Panel</slot>
+                                </BreadcrumbPage>
                             </BreadcrumbItem>
                         </BreadcrumbList>
                     </Breadcrumb>
                 </div>
                 <div class="relative ml-auto flex-1 md:grow-0">
                     <Search class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
+                    <input
                         type="search"
-                        placeholder="Search..."
-                        class="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
+                        placeholder="Buscar..."
+                        class="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px] border border-input px-2 py-1 text-sm"
                     />
                 </div>
 
-                <DarkModeDropdown></DarkModeDropdown>
-                <DropdownMenu>
-                    <DropdownMenuTrigger as-child>
-                        <Button variant="secondary" size="icon" class="rounded-full">
-                            <CircleUser class="h-5 w-5" />
-                            <span class="sr-only">Toggle user menu</span>
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>Settings</DropdownMenuItem>
-                        <DropdownMenuItem>Support</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                            :href="route('logout')"
-                            method="post"
-                        >
-                            <Link
-                            :href="route('logout')"
-                            method="post">
-                                Log Out
-                            </Link>
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <DarkModeDropdown />
             </header>
 
-            <main>
-                <slot></slot>
+            <div v-if="$slots.header" class="px-4 py-4">
+                <slot name="header" />
+            </div>
+
+            <main class="px-4 pb-10">
+                <slot />
             </main>
         </SidebarInset>
     </SidebarProvider>
 </template>
-
 
